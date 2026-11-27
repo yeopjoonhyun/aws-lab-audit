@@ -23,10 +23,19 @@
 
 | 프로필 | 용도 | 필요한 권한 |
 | --- | --- | --- |
-| `lab-admin` | 테스트 리소스 생성과 삭제 | 실습 계정의 기존 관리자 권한 |
-| `lab-audit-readonly` | `aws-lab-audit scan` 실행 | 아래 정책만 |
+| `default` | 테스트 리소스 생성과 삭제 | 실습 계정의 기존 관리자 권한 |
+| `lab-audit-readonly` | `aws-lab-audit scan` 실행 | IAM 역할 `aws-lab-audit-readonly`의 아래 정책만 |
 
-`lab-audit-readonly`에 연결할 정책입니다. `sts:GetCallerIdentity`는 별도 권한 없이 호출됩니다. 두 Describe 작업은 리소스 단위 제한을 지원하지 않아서 `Resource`가 `*`입니다.
+`lab-audit-readonly`는 새 액세스 키 없이 `default` 사용자가 역할을 잠시 맡는 방식입니다. 역할의 신뢰 정책은 `default` 사용자 ARN 하나만 `sts:AssumeRole`을 허용하고, `~/.aws/config`에는 다음처럼 들어갑니다.
+
+```ini
+[profile lab-audit-readonly]
+role_arn = arn:aws:iam::<ACCOUNT>:role/aws-lab-audit-readonly
+source_profile = default
+region = ap-southeast-2
+```
+
+역할에 붙인 인라인 정책입니다. `sts:GetCallerIdentity`는 별도 권한 없이 호출됩니다. 두 Describe 작업은 리소스 단위 제한을 지원하지 않아서 `Resource`가 `*`입니다.
 
 ```json
 {
@@ -41,7 +50,7 @@
 }
 ```
 
-터미널에서 공통 값을 정합니다. 터미널을 닫으면 변수가 사라지므로 3단계부터 5단계까지는 한 창에서 진행합니다.
+터미널에서 공통 값을 정합니다. 터미널을 닫으면 변수가 사라지므로 1단계부터 6단계까지는 한 창에서 진행합니다.
 
 ```sh
 cd aws-lab-audit
@@ -63,22 +72,22 @@ mkdir -p reports docs/evidence
 - [ ] 첫 명령이 계정 번호를 출력합니다. `ACCOUNT=<출력된 Account 값>`으로 저장합니다.
 - [ ] 두 번째 명령은 `UnauthorizedOperation`으로 실패해야 합니다. 생성 권한이 없다는 증거입니다.
 
-## 2. 테스트 리소스 생성 (`lab-admin`)
+## 2. 테스트 리소스 생성 (`default`)
 
 - [ ] 실행
 
   ```sh
   VOL_REVIEW=$(aws ec2 create-volume --availability-zone ${REGION}a --size 1 --volume-type gp3 \
     --tag-specifications "ResourceType=volume,Tags=[$TAG]" \
-    --region $REGION --profile lab-admin --query VolumeId --output text)
+    --region $REGION --profile default --query VolumeId --output text)
 
   VOL_KEEP=$(aws ec2 create-volume --availability-zone ${REGION}a --size 1 --volume-type gp3 \
     --tag-specifications "ResourceType=volume,Tags=[$TAG,{Key=Keep,Value=true}]" \
-    --region $REGION --profile lab-admin --query VolumeId --output text)
+    --region $REGION --profile default --query VolumeId --output text)
 
   EIP=$(aws ec2 allocate-address --domain vpc \
     --tag-specifications "ResourceType=elastic-ip,Tags=[$TAG]" \
-    --region $REGION --profile lab-admin --query AllocationId --output text)
+    --region $REGION --profile default --query AllocationId --output text)
 
   echo "$VOL_REVIEW $VOL_KEEP $EIP"
   ```
@@ -88,7 +97,7 @@ mkdir -p reports docs/evidence
 
   ```sh
   aws ec2 wait volume-available --volume-ids $VOL_REVIEW $VOL_KEEP \
-    --region $REGION --profile lab-admin
+    --region $REGION --profile default
   ```
 
 ## 3. 정리 전 조회 (`lab-audit-readonly`)
@@ -115,12 +124,12 @@ mkdir -p reports docs/evidence
 
 ## 4. 실습 정리 후 비교
 
-- [ ] Keep이 없는 리소스만 삭제합니다 (`lab-admin`).
+- [ ] Keep이 없는 리소스만 삭제합니다 (`default`).
 
   ```sh
-  aws ec2 delete-volume --volume-id $VOL_REVIEW --region $REGION --profile lab-admin
-  aws ec2 release-address --allocation-id $EIP --region $REGION --profile lab-admin
-  aws ec2 wait volume-deleted --volume-ids $VOL_REVIEW --region $REGION --profile lab-admin
+  aws ec2 delete-volume --volume-id $VOL_REVIEW --region $REGION --profile default
+  aws ec2 release-address --allocation-id $EIP --region $REGION --profile default
+  aws ec2 wait volume-deleted --volume-ids $VOL_REVIEW --region $REGION --profile default
   ```
 
 - [ ] 다시 조회하고 비교합니다 (`lab-audit-readonly`).
@@ -142,8 +151,8 @@ mkdir -p reports docs/evidence
 - [ ] Keep 볼륨까지 삭제합니다.
 
   ```sh
-  aws ec2 delete-volume --volume-id $VOL_KEEP --region $REGION --profile lab-admin
-  aws ec2 wait volume-deleted --volume-ids $VOL_KEEP --region $REGION --profile lab-admin
+  aws ec2 delete-volume --volume-id $VOL_KEEP --region $REGION --profile default
+  aws ec2 wait volume-deleted --volume-ids $VOL_KEEP --region $REGION --profile default
   uv run aws-lab-audit scan --region $REGION --project $PROJECT \
     --profile lab-audit-readonly --output reports/final.json; echo "exit=$?"
   ```
