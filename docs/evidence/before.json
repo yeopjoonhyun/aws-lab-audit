@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "scanned_at": "2026-11-28T09:59:17+00:00",
+  "scope": {
+    "account_id": "123456789012",
+    "region": "ap-southeast-2",
+    "project": "aws-lab-audit-verify"
+  },
+  "scans": {
+    "ebs": {
+      "status": "ok",
+      "resources": [
+        {
+          "id": "vol-keep-masked",
+          "status": "retained",
+          "evidence": "State=available, Size=1 GiB · Keep=true"
+        },
+        {
+          "id": "vol-review-masked",
+          "status": "review",
+          "evidence": "State=available, Size=1 GiB"
+        }
+      ]
+    },
+    "eip": {
+      "status": "ok",
+      "resources": [
+        {
+          "id": "eipalloc-review-masked",
+          "status": "review",
+          "evidence": "연결 정보 없음"
+        }
+      ]
+    }
+  }
+}

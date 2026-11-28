@@ -51,3 +51,14 @@ uv run python -m unittest discover -s tests -v
 ```
 
 테스트는 AWS 응답을 모의해 페이지 조회, 프로젝트 태그 범위, 보관 예외, 권한 오류, 정리 전후 비교를 검증합니다.
+
+## 실계정 검증
+
+2026-11-28에 실제 AWS 계정(`ap-southeast-2`)에서 한 번 검증했습니다. Project 태그를 붙인 1 GiB 볼륨 2개(하나는 `Keep=true`)와 Elastic IP 1개를 만들었습니다. 그다음 `ec2:DescribeVolumes`, `ec2:DescribeAddresses`만 허용한 IAM 역할로 정리 전후를 조회하고 비교했습니다.
+
+- 정리 전 보고서와 AWS CLI 직접 조회 결과가 일치했습니다.
+- 같은 역할로 볼륨 생성을 시도하면 `UnauthorizedOperation`으로 거부되었습니다.
+- 삭제한 볼륨과 Elastic IP는 "더 이상 조회되지 않음", Keep 볼륨은 "변경 없음"으로 표시되었습니다.
+- 마지막 조회에서 두 유형 모두 리소스가 없었습니다. 테스트 리소스는 약 1분 동안만 존재했습니다.
+
+절차와 성공 기준은 [`docs/real-account-check.md`](docs/real-account-check.md)에, 계정 번호와 리소스 ID를 가린 보고서는 [`docs/evidence/`](docs/evidence/)에 있습니다.
