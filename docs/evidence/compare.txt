@@ -1,0 +1,8 @@
+AWS 정리 전후 비교 · ap-southeast-2 | Project=aws-lab-audit-verify
+
+EBS 볼륨
+  이 태그 범위에서 더 이상 조회되지 않음: vol-review-masked  점검 대상  (State=available, Size=1 GiB)
+  변경 없음: vol-keep-masked  유지 예외  (State=available, Size=1 GiB · Keep=true)
+
+Elastic IP
+  이 태그 범위에서 더 이상 조회되지 않음: eipalloc-review-masked  점검 대상  (연결 정보 없음)

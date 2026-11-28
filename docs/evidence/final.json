@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scanned_at": "2026-11-28T10:00:03+00:00",
+  "scope": {
+    "account_id": "123456789012",
+    "region": "ap-southeast-2",
+    "project": "aws-lab-audit-verify"
+  },
+  "scans": {
+    "ebs": {
+      "status": "ok",
+      "resources": []
+    },
+    "eip": {
+      "status": "ok",
+      "resources": []
+    }
+  }
+}
