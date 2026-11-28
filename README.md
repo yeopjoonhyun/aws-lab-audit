@@ -1,5 +1,7 @@
 # AWS Lab Audit
 
+[![test](https://github.com/yeopjoonhyun/aws-lab-audit/actions/workflows/test.yml/badge.svg)](https://github.com/yeopjoonhyun/aws-lab-audit/actions/workflows/test.yml)
+
 AWS 실습이 끝난 뒤 EBS 볼륨과 Elastic IP가 남았는지 확인하는 Python CLI입니다. Terraform 정리 후 콘솔과 CLI를 오가며 확인하던 작업을 JSON 보고서 두 장으로 재현합니다.
 
 ## AWS 계정 없이 실행
@@ -49,6 +51,8 @@ uv run aws-lab-audit compare reports/before.json reports/after.json
 ```sh
 uv run python -m unittest discover -s tests -v
 ```
+
+GitHub Actions가 `main` 푸시와 모든 PR에서 Python 3.11과 3.13으로 이 테스트를 실행합니다. 실계정 검증의 가린 보고서로 비교 결과가 그대로 재현되는지도 확인합니다.
 
 테스트는 AWS 응답을 모의해 페이지 조회, 프로젝트 태그 범위, 보관 예외, 권한 오류, 정리 전후 비교를 검증합니다.
 
